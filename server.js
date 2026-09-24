@@ -121,4 +121,4 @@ const server=http.createServer((req,res)=>{
 });
 const wss=new WebSocket.Server({server});
 wss.on('connection',ws=>{ws.on('message',d=>{try{handle(ws,JSON.parse(d.toString()))}catch(e){sendError(ws,'Server error: '+e.message)}});ws.on('close',()=>disconnect(ws));});
-server.listen(PORT,()=>console.log(`304 multiplayer server running on http://localhost:${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`304 multiplayer server running on port ${PORT}`));
