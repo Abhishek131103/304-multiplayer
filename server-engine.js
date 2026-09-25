@@ -124,6 +124,7 @@ function startRound(){
   const cfg=bidLimits(G.total);
   G.bid={min:cfg.min,max:cfg.max,step:cfg.step,passed:[false,false,false,false],high:0,highBy:-1,turn:(G.dealer+1)%4};
   G.phase='bidding';G.round++;G.vis2=[false,false,false,false];
+  if(G.rules.showAll8)G.vis2[G.bid.turn]=true;
   G.trumpSuit=null;G.trumpRevealed=false;G.bidder=-1;G.contract=0;
   G.partnerCard=null;G.partner=-1;G.partnerRevealed=false;G.partnerOut=false;G.marriages=[];G.extraTarget=0;
   G.trick=[];G.collect=null;G.tricksPlayed=0;G.pts=[0,0];G.tricksWon=[0,0];
@@ -146,11 +147,13 @@ function nextBidTurn(){
   if(alive.length===0){G.phase='redeal';addLog('Everyone passed');return;}
   if(alive.length===1&&b.highBy===alive[0]){
     G.bidder=b.highBy;G.contract=b.high;G.phase='call';
+    G.vis2=[false,false,false,false];
     if(G.rules.showAll8)G.vis2[G.bidder]=true;
     addLog(nm(G.bidder)+' wins the bid at '+G.contract);return;
   }
   let n=(b.turn+1)%4;while(b.passed[n])n=(n+1)%4;
   b.turn=n;
+  if(G.rules.showAll8){G.vis2=[false,false,false,false];G.vis2[b.turn]=true;}
 }
 
 /* ================= trump and partner call ================= */
@@ -264,17 +267,15 @@ function playCard(id,marriage){
   if(marriage&&!marriageOptions(p)[id])return 'A marriage cannot be declared with this card';
   const hand=G.hands[p];
   hand.splice(hand.indexOf(c),1);
-  if(marriage&&c.s===G.trumpSuit&&!G.trumpRevealed)
-    revealTrump(nm(p)+' declares a marriage in the concealed trump suit.');
-  if(p===G.bidder&&!G.trumpRevealed&&G.trick.length===0&&c.s===G.trumpSuit)
-    revealTrump(nm(p)+' leads the trump suit.');
+  if(c.s===G.trumpSuit&&!G.trumpRevealed)
+    revealTrump(nm(p)+' reveals the trump.');
   if(G.partnerCard&&G.partnerCard.id===c.id&&!G.partnerRevealed){
     G.partnerRevealed=true;G.partnerOut=true;
     addLog(p===G.bidder
       ?nm(p)+' played their own called card and is playing alone.'
       :nm(p)+' played the called '+cname(c)+' and is the partner of '+nm(G.bidder)+'.');
   }
-  G.trick.push({p:p,card:c,live:G.trumpRevealed});
+  G.trick.push({p:p,card:c,live:(G.trumpRevealed&&c.s===G.trumpSuit)});
   if(marriage){
     const val=(c.s===G.trumpSuit)?MARRIAGE_T:MARRIAGE_NT;
     const side=sideOf(p);
@@ -396,3 +397,4 @@ const E={SUITS,SM,SUIT_SORT,RANKS,ORDER,POINTS,POS,POS_NAME,DEF_RULES,CLASSIC_RU
 if(typeof window!=='undefined')window.__E=E;
 if(typeof module!=='undefined')module.exports=E;
 })();
+    
